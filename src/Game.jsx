@@ -15,10 +15,7 @@ function Square({ value, onSquareClick }) {
 }
 
 //Board child component
-function Board() {
-  const [squares, setSquares] = useState(Array(9).fill(null));
-  const [xIsNext, setXIsNext] = useState(true);
-
+function Board({ xIsNext, squares, onPlay }) {
   const winner = calculateWinner(squares);
   let status;
 
@@ -40,8 +37,7 @@ function Board() {
     } else {
       nextSquares[i] = 'O';
     }
-    setSquares(nextSquares);
-    setXIsNext(!xIsNext);
+    onPlay(nextSquares);
   }
 
   return (
@@ -71,18 +67,49 @@ function Board() {
 }
 
 export default function Game() {
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [xIsNext, setXIsNext] = useState(true);
+  const [currentMove, setCurrentMove] = useState(0);
+
+  const currentSquares = history[currentMove];
+
+  function handlePlay(nextSquares) {
+    setXIsNext(!xIsNext);
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+    setHistory(nextHistory);
+    setCurrentMove(nextHistory.length - 1);
+  }
+
+  function jumpTo(move) {
+    setCurrentMove(move);
+    setXIsNext(move % 2 === 0);
+  }
+
+  const moves = history.map((squares, move) => {
+    let description;
+    if (move > 0) {
+      description = `Go to the move # ${move}`;
+    } else {
+      description = `Start the game`;
+    }
+    return (
+      <li className="font-bold" key={move}>
+        <button onClick={() => jumpTo(move)}>{description}</button>
+      </li>
+    );
+  });
+
   return (
-    <div className="flex items-center justify-center h-screen w-6/12 mx-auto">
+    <div className="flex items-center justify-center h-screen w-7/12 mx-auto gap-6">
       <div className="flex-1  items-center justify-center ">
-        <Board></Board>
+        <Board
+          xIsNext={xIsNext}
+          squares={currentSquares}
+          onPlay={handlePlay}
+        ></Board>
       </div>
       <div className="flex-1 ">
-        <p>
-          Lorem ipsum dolor, sit amet consectetur adipisicing elit. Consequatur
-          esse similique neque distinctio obcaecati quaerat commodi perspiciatis
-          qui quas nesciunt repellat adipisci suscipit, ipsum hic accusamus
-          voluptas assumenda in reiciendis!
-        </p>
+        <ol>{moves}</ol>
       </div>
     </div>
   );
